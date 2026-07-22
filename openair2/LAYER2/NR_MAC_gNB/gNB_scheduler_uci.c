@@ -411,6 +411,7 @@ static void handle_dl_harq(NR_UE_info_t * UE,
     LOG_D(PHY,"NACK for: pid %d, ue %04x\n",harq_pid, UE->rnti);
     add_tail_nr_list(&sched_ctrl->retrans_dl_harq, harq_pid);
     harq->round++;
+    UE_LOG_FMT(NR_MAC, LOG_A, "UE %04x HARQ retransmission round %d total retransmissions %d", UE->rnti, harq_pid, harq->round, sched_ctrl->harq_retransmission_count[harq_pid]);
   }
 }
 
