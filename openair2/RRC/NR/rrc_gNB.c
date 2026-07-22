@@ -1738,6 +1738,7 @@ static void handle_rrcSetupComplete(gNB_RRC_INST *rrc, gNB_RRC_UE_t *UE, const N
 #endif
 
   rrc_gNB_process_RRCSetupComplete(rrc, UE, setup_complete->criticalExtensions.choice.rrcSetupComplete);
+  LOG_A(NR_RRC, UE_LOG_FMT " RRC connection established at timestamp %ld\n", UE_LOG_ARGS(UE), time(NULL));
   return;
 }
 
