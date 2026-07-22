@@ -1459,6 +1459,23 @@ static void rrc_gNB_process_MeasurementReport(gNB_RRC_INST *rrc, gNB_RRC_UE_t *U
   }
 
   NR_MeasurementReport_IEs_t *measurementReport_IEs = measurementReport->criticalExtensions.choice.measurementReport;
+
+  // Log RSRP and RSRQ for serving cell if present
+  if (measurementReport_IEs->measResults.measResultServingMOList.list.count > 0) {
+    const NR_MeasResultServMO_t *meas_result_serv_MO = measurementReport_IEs->measResults.measResultServingMOList.list.array[0];
+    int rsrp = 0;
+    int rsrq = 0;
+    if (meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsSSB_Cell) {
+      rsrp = *(meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsSSB_Cell->rsrp) - 157;
+      rsrq = *(meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsSSB_Cell->rsrq) / 2 - 20;
+    } else if (meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsCSI_RS_Cell) {
+      rsrp = *(meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsCSI_RS_Cell->rsrp) - 157;
+      rsrq = *(meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsCSI_RS_Cell->rsrq) / 2 - 20;
+    }
+    UE_LOG_FMT(NR_RRC, LOG_A, "Measurement Report: UE %d, Serving Cell RSRP %d dBm, RSRQ %d dB, Timestamp %lu",
+              UE_LOG_ARGS(UE), rsrp, rsrq, (unsigned long)time(NULL));
+  }
+
   const NR_MeasId_t measId = measurementReport_IEs->measResults.measId;
 
   NR_MeasIdToAddMod_t *meas_id_s = NULL;
