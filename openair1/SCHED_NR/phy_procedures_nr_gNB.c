@@ -809,6 +809,23 @@ int phy_procedures_gNB_uespec_RX(PHY_VARS_gNB *gNB, int frame_rx, int slot_rx, N
 
   UL_INFO->crc_ind.sfn = frame_rx;
   UL_INFO->crc_ind.slot = slot_rx;
+
+  static uint64_t last_log_time = 0;
+  uint64_t current_time = (uint64_t)(frame_rx * 10 + slot_rx / 10); // Approximate time in seconds assuming 10 slots per frame
+  if (current_time != last_log_time) {
+  last_log_time = current_time;
+  int total_prbs = gNB->frame_parms.N_RB_DL;
+  int allocated_prbs = 0;
+  for (int i = 0; i < gNB->max_nb_pucch; i++) {
+  NR_gNB_PUCCH_t *pucch = &gNB->pucch[i];
+  if (pucch && pucch->active && pucch->frame == frame_rx && pucch->slot == slot_rx) {
+  allocated_prbs += pucch->pucch_pdu.nr_of_prb;
+  }
+  }
+  int prb_utilization = total_prbs > 0 ? (allocated_prbs * 100) / total_prbs : 0;
+  LOG_A(PHY, UE_LOG_FMT "PRB Utilization: %d%% (allocated %d / total %d)\n", UE_LOG_ARGS(gNB), prb_utilization, allocated_prbs, total_prbs);
+  }
+  UL_INFO->crc_ind.slot = slot_rx;
   UL_INFO->crc_ind.crc_list = UL_INFO->crc_pdu_list;
   UL_INFO->rx_ind.sfn = frame_rx;
   UL_INFO->rx_ind.slot = slot_rx;

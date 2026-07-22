@@ -1015,7 +1015,11 @@ rrc_eNB_process_RRCConnectionSetupComplete(
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
   ue_context_pP->ue_context.Srb1.Active = 1;
   ue_context_pP->ue_context.StatusRrc = RRC_CONNECTED;
+  LOG_A(RRC, UE_LOG_FMT " RRC connection established at frame %d subframe %d",
+  UE_LOG_ARGS(ctxt_pP), ctxt_pP->frame, ctxt_pP->subframe);
   ue_context_pP->ue_context.ue_rrc_inactivity_timer = 1; // set rrc inactivity timer when UE goes into RRC_CONNECTED
+  LOG_A(RRC, UE_LOG_FMT " RRC connection established at frame %d subframe %d",
+  UE_LOG_ARGS(ctxt_pP), ctxt_pP->frame, ctxt_pP->subframe);
   T(T_ENB_RRC_CONNECTION_SETUP_COMPLETE, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame), T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rntiMaybeUEid));
 
   if ((!IS_SOFTMODEM_NOS1) == 1) {
