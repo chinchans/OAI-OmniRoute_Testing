@@ -1153,6 +1153,7 @@ rrc_eNB_generate_RRCConnectionReject(
   T(T_ENB_RRC_CONNECTION_REJECT, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame), T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rntiMaybeUEid));
   eNB_RRC_UE_t *ue_p = &ue_context_pP->ue_context;
   ue_p->Srb0.Tx_buffer.payload_size =
+  LOG_A(RRC, UE_LOG_FMT " RRC connection setup generated at frame %d subframe %d\n", UE_LOG_ARGS(ctxt_pP), ctxt_pP->frame, ctxt_pP->subframe);
     do_RRCConnectionReject(ctxt_pP->module_id,
                            (uint8_t *) ue_p->Srb0.Tx_buffer.Payload);
   LOG_DUMPMSG(RRC,DEBUG_RRC,

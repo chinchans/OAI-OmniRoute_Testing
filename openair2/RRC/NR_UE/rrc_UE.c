@@ -2232,14 +2232,6 @@ void nr_rrc_handle_ra_indication(NR_UE_RRC_INST_t *rrc, bool ra_succeeded)
   }
 }
 
-void handle_rlf_detection(NR_UE_RRC_INST_t *rrc)
-{
-  // Log UE identity and timestamp when RRC connection is successfully established
-  LOG_A(NR_RRC, "[UE %ld] RRC connection established at timestamp %ld\n", UE_LOG_FMT(rrc), UE_LOG_ARGS(rrc), time(NULL));
-  // Existing logic for handling radio link failure detection
-  // ... (existing code not shown here) ...
-}
-
 void *rrc_nrue_task(void *args_p)
 {
   itti_mark_task_ready(TASK_RRC_NRUE);

@@ -153,12 +153,6 @@ static meas_record_lst_t fill_DRB_UEThpUl(uint32_t gran_period_ms, cudu_ue_info_
 
   // Calculate UL Thp
   meas_record.real_val = (double)(rlc.rxpdu_bytes - last_rlc_pdu_total_bytes[ue_idx].ul)*8/gran_period_ms;  // [kbps]
-
-  /* Log gNB PRB utilisation percentage every second */
-  if (gran_period_ms == 1000 && ue_info.ue->mac_stats.ul.total_rbs > 0) {
-  int prb_util_percent = 100 * ue_info.ue->mac_stats.ul.used_rbs / ue_info.ue->mac_stats.ul.total_rbs;
-  LOG_A(UE_LOG_FMT("gNB PRB utilisation: %d%% (used %d / total %d)"), UE_LOG_ARGS(ue_info.ue->rnti), prb_util_percent, ue_info.ue->mac_stats.ul.used_rbs, ue_info.ue->mac_stats.ul.total_rbs);
-  }
   last_rlc_pdu_total_bytes[ue_idx].ul = rlc.rxpdu_bytes;
   
   return meas_record;
