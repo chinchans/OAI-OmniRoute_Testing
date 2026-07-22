@@ -152,6 +152,10 @@ static bool crc_sfn_slot_matcher(void *wanted, void *candidate)
 
 static void handle_nr_ulsch(NR_UL_IND_t *UL_info)
 {
+  static uint64_t last_log_time_ms = 0;
+  static uint32_t crc_pass_count = 0;
+  static uint32_t crc_fail_count = 0;
+
   if(NFAPI_MODE == NFAPI_MODE_PNF) {
     if (UL_info->crc_ind.number_crcs > 0) {
       LOG_D(PHY,"UL_info->UL_info->crc_ind.number_crcs:%d CRC_IND:SFN/Slot:%d.%d\n", UL_info->crc_ind.number_crcs, UL_info->crc_ind.sfn, UL_info->crc_ind.slot);
@@ -203,7 +207,25 @@ static void handle_nr_ulsch(NR_UL_IND_t *UL_info)
                 crc->timing_advance,
                 crc->ul_cqi,
                 crc->rssi);
+
+      if (crc->tb_crc_status == 0) {
+        crc_pass_count++;
+      } else {
+        crc_fail_count++;
+      }
     }
+
+    uint64_t now_ms = get_time_ms();
+    if (now_ms - last_log_time_ms >= 500) {
+      uint32_t total = crc_pass_count + crc_fail_count;
+      float bler = total ? ((float)crc_fail_count / total) : 0.0f;
+      LOG_A(NR_MAC, "UL BLER: %.2f%% (pass: %u, fail: %u) at frame %d slot %d",
+            bler * 100.0f, crc_pass_count, crc_fail_count, UL_info->frame, UL_info->slot);
+      crc_pass_count = 0;
+      crc_fail_count = 0;
+      last_log_time_ms = now_ms;
+    }
+
     UL_info->rx_ind.number_of_pdus = 0;
     UL_info->crc_ind.number_crcs = 0;
   }
