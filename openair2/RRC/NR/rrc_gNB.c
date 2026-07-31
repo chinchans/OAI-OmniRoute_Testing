@@ -435,6 +435,7 @@ static void rrc_gNB_process_RRCSetupComplete(gNB_RRC_INST *rrc, gNB_RRC_UE_t *UE
 {
   UE->Srb[1].Active = 1;
   UE->Srb[2].Active = 0;
+  LOG_A(NR_RRC, UE_LOG_FMT " RRC Setup Complete at timestamp %lu\n", UE_LOG_ARGS(UE), (unsigned long)time(NULL));
 
   rrc_gNB_send_NGAP_NAS_FIRST_REQ(rrc, UE, rrcSetupComplete);
 }
@@ -1472,8 +1473,8 @@ static void rrc_gNB_process_MeasurementReport(gNB_RRC_INST *rrc, gNB_RRC_UE_t *U
       rsrp = *(meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsCSI_RS_Cell->rsrp) - 157;
       rsrq = *(meas_result_serv_MO->measResultServingCell.measResult.cellResults.resultsCSI_RS_Cell->rsrq) / 2 - 20;
     }
-    UE_LOG_FMT(NR_RRC, LOG_A, "Measurement Report: UE %d, Serving Cell RSRP %d dBm, RSRQ %d dB, Timestamp %lu",
-              UE_LOG_ARGS(UE), rsrp, rsrq, (unsigned long)time(NULL));
+    LOG_A(NR_RRC, UE_LOG_FMT " Measurement Report: Serving Cell RSRP %d dBm, RSRQ %d dB, Timestamp %lu",
+          UE_LOG_ARGS(UE), rsrp, rsrq, (unsigned long)time(NULL));
   }
 
   const NR_MeasId_t measId = measurementReport_IEs->measResults.measId;
