@@ -2951,6 +2951,14 @@ void rrc_gNB_generate_RRCRelease(gNB_RRC_INST *rrc, gNB_RRC_UE_t *UE)
     .cause_value = 10, // 10 = F1AP_CauseRadioNetwork_normal_release
     .srb_id = &srbid, // C-ifRRCContainer => is added below
   };
+
+  LOG_A(NR_RRC,
+        UE_LOG_FMT " RRC Release: cause=%d cause_value=%d at timestamp %lu\n",
+        UE_LOG_ARGS(UE),
+        ue_context_release_cmd.cause,
+        ue_context_release_cmd.cause_value,
+        (unsigned long)time(NULL));
+
   deliver_ue_ctxt_release_data_t data = {.rrc = rrc, .release_cmd = &ue_context_release_cmd, .assoc_id = ue_data.du_assoc_id};
   nr_pdcp_data_req_srb(UE->rrc_ue_id, DL_SCH_LCID_DCCH, rrc_gNB_mui++, size, buffer, rrc_deliver_ue_ctxt_release_cmd, &data);
 
