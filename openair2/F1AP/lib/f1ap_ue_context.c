@@ -1602,6 +1602,114 @@
    }
  
    /* optional: RRC container */
+
+
+   /*
+   * @brief Decode F1 UE context setup response from ASN.1
+   */
+   int decode_ue_context_setup_resp(const F1AP_F1AP_PDU_t *pdu, f1ap_ue_context_setup_resp_t *resp)
+   {
+   if (!pdu || !resp) return -1;
+
+   if (pdu->present != F1AP_F1AP_PDU_PR_successfulOutcome) return -1;
+   if (pdu->choice.successfulOutcome->procedureCode != F1AP_ProcedureCode_id_UEContextSetup) return -1;
+   if (pdu->choice.successfulOutcome->value.present != F1AP_SuccessfulOutcome__value_PR_UEContextSetupResponse) return -1;
+
+   F1AP_UEContextSetupResponse_t *in = &pdu->choice.successfulOutcome->value.choice.UEContextSetupResponse;
+
+   for (int i = 0; i < in->protocolIEs.list.count; i++) {
+   F1AP_UEContextSetupResponseIEs_t *ie = in->protocolIEs.list.array[i];
+   switch (ie->id) {
+   case F1AP_ProtocolIE_ID_id_gNB_CU_UE_F1AP_ID:
+   resp->gNB_CU_ue_id = ie->value.choice.GNB_CU_UE_F1AP_ID;
+   break;
+   case F1AP_ProtocolIE_ID_id_gNB_DU_UE_F1AP_ID:
+   resp->gNB_DU_ue_id = ie->value.choice.GNB_DU_UE_F1AP_ID;
+   break;
+   case F1AP_ProtocolIE_ID_id_CUtoDURRCInformation:
+   resp->du_to_cu_rrc_info = decode_du_to_cu_rrc_info(&ie->value.choice.CUtoDURRCInformation);
+   break;
+   case F1AP_ProtocolIE_ID_id_CRNTI:
+   if (!resp->crnti) resp->crnti = calloc(1, sizeof(*resp->crnti));
+   *resp->crnti = ie->value.choice.CRNTI;
+   break;
+   case F1AP_ProtocolIE_ID_id_DRBs_Setup_List:
+   resp->drbs = decode_drbs_setup(&ie->value.choice.DRBs_Setup_List, &resp->drbs_len);
+   break;
+   case F1AP_ProtocolIE_ID_id_SRBs_Setup_List:
+   resp->srbs = decode_srbs_setup(&ie->value.choice.SRBs_Setup_List, &resp->srbs_len);
+   break;
+   case F1AP_ProtocolIE_ID_id_requestedTargetCellGlobalID:
+   if (!resp->requestedTargetCellGlobalID) resp->requestedTargetCellGlobalID = calloc(1, sizeof(*resp->requestedTargetCellGlobalID));
+   resp->requestedTargetCellGlobalID->pLMN_Identity = ie->value.choice.requestedTargetCellGlobalID.pLMN_Identity;
+   resp->requestedTargetCellGlobalID->nRCellIdentity = ie->value.choice.requestedTargetCellGlobalID.nRCellIdentity;
+   break;
+   case F1AP_ProtocolIE_ID_id_EarlySyncInformation:
+   resp->EarlySyncInformation = decode_early_sync_information(&ie->value.choice.EarlySyncInformation);
+   break;
+   case F1AP_ProtocolIE_ID_id_LTMConfiguration:
+   resp->LTMConfiguration = decode_ltm_configuration(&ie->value.choice.LTMConfiguration);
+   break;
+   default:
+   // Unknown IE, ignore or log
+   break;
+   }
+   }
+
+   return 0;
+   }
+
+   /* optional: LTMInformation-Setup */
+   if (req->LTMInformation_Setup) {
+   asn1cSequenceAdd(out->protocolIEs.list, F1AP_UEContextSetupRequestIEs_t, ie);
+   ie->id = F1AP_ProtocolIE_ID_id_LTMInformation_Setup;
+   ie->criticality = F1AP_Criticality_ignore;
+   ie->value.present = F1AP_UEContextSetupRequestIEs__value_PR_LTMInformation_Setup;
+   F1AP_LTMInformation_Setup_t *ltm = &ie->value.choice.LTMInformation_Setup;
+   ltm->LTMIndicator = req->LTMInformation_Setup->LTMIndicator;
+   if (req->LTMInformation_Setup->ReferenceConfiguration) {
+   OCTET_STRING_fromBuf(&ltm->ReferenceConfiguration, (const char *)req->LTMInformation_Setup->ReferenceConfiguration->buf, req->LTMInformation_Setup->ReferenceConfiguration->len);
+   }
+   if (req->LTMInformation_Setup->cSIResourceConfigToAddModList) {
+   OCTET_STRING_fromBuf(&ltm->cSIResourceConfigToAddModList, (const char *)req->LTMInformation_Setup->cSIResourceConfigToAddModList->buf, req->LTMInformation_Setup->cSIResourceConfigToAddModList->len);
+   }
+   if (req->LTMInformation_Setup->cSIResourceConfigToReleaseList) {
+   OCTET_STRING_fromBuf(&ltm->cSIResourceConfigToReleaseList, (const char *)req->LTMInformation_Setup->cSIResourceConfigToReleaseList->buf, req->LTMInformation_Setup->cSIResourceConfigToReleaseList->len);
+   }
+   }
+
+   /* optional: LTMConfigurationIDMappingList */
+   if (req->LTMConfigurationIDMappingList) {
+   for (int i = 0; i < req->LTMConfigurationIDMappingList->list_count; i++) {
+   asn1cSequenceAdd(out->protocolIEs.list, F1AP_LTMConfigurationIDMappingList_ItemIEs_t, ie);
+   ie->id = F1AP_ProtocolIE_ID_id_LTMConfigurationIDMappingItem;
+   ie->criticality = F1AP_Criticality_ignore;
+   ie->value.present = F1AP_LTMConfigurationIDMappingList_ItemIEs__value_PR_LTMConfigurationIDMappingItem;
+   F1AP_LTMConfigurationIDMappingItem_t *item = &ie->value.choice.LTMConfigurationIDMappingItem;
+   MCC_MNC_TO_PLMNID(req->LTMConfigurationIDMappingList->list_array[i].lTMCellID_plmn.mcc, req->LTMConfigurationIDMappingList->list_array[i].lTMCellID_plmn.mnc, req->LTMConfigurationIDMappingList->list_array[i].lTMCellID_plmn.mnc_digit_length, &item->nR_CGI.pLMN_Identity);
+   NR_CELL_ID_TO_BIT_STRING(req->LTMConfigurationIDMappingList->list_array[i].lTMCellID_nr_cellid, &item->nR_CGI.nRCellIdentity);
+   item->lTMConfigurationID = req->LTMConfigurationIDMappingList->list_array[i].lTMConfigurationID;
+   }
+   }
+
+   /* optional: EarlySyncInformation-Request */
+   if (req->EarlySyncInformation_Request) {
+   asn1cSequenceAdd(out->protocolIEs.list, F1AP_EarlySyncInformation_RequestIEs_t, ie);
+   ie->id = F1AP_ProtocolIE_ID_id_EarlySyncInformation_Request;
+   ie->criticality = F1AP_Criticality_ignore;
+   ie->value.present = F1AP_EarlySyncInformation_RequestIEs__value_PR_EarlySyncInformation_Request;
+   F1AP_EarlySyncInformation_Request_t *early = &ie->value.choice.EarlySyncInformation_Request;
+   if (req->EarlySyncInformation_Request->RequestforRACHConfiguration) {
+   OCTET_STRING_fromBuf(&early->RequestforRACHConfiguration, (const char *)req->EarlySyncInformation_Request->RequestforRACHConfiguration->buf, req->EarlySyncInformation_Request->RequestforRACHConfiguration->len);
+   }
+   for (int i = 0; i < req->EarlySyncInformation_Request->LTMgNB_DU_IDsList_count; i++) {
+   asn1cSequenceAdd(&early->LTMgNB_DU_IDsList.list, F1AP_LTMgNB_DU_IDs_ItemIEs_t, ie2);
+   ie2->id = F1AP_ProtocolIE_ID_id_LTMgNB_DU_IDs_Item;
+   ie2->criticality = F1AP_Criticality_ignore;
+   ie2->value.present = F1AP_LTMgNB_DU_IDs_ItemIEs__value_PR_LTMgNB_DU_IDs_Item;
+   asn_uint642INTEGER(&ie2->value.choice.LTMgNB_DU_IDs_Item.lTMgNB_DU_ID, req->EarlySyncInformation_Request->LTMgNB_DU_IDsList_array[i].lTMgNB_DU_ID);
+   }
+   }
    if (req->rrc_container) {
      asn1cSequenceAdd(out->protocolIEs.list, F1AP_UEContextSetupRequestIEs_t, ie);
      ie->id = F1AP_ProtocolIE_ID_id_RRCContainer;

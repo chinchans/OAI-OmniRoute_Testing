@@ -78,10 +78,23 @@ static void gnb_du_configuration_update_ack_f1ap(sctp_assoc_t assoc_id, const f1
 
 static void ue_context_setup_request_f1ap(sctp_assoc_t assoc_id, const f1ap_ue_context_setup_req_t *req)
 {
-  MessageDef *msg = itti_alloc_new_message(TASK_RRC_GNB, 0, F1AP_UE_CONTEXT_SETUP_REQ);
-  msg->ittiMsgHeader.originInstance = assoc_id;
-  F1AP_UE_CONTEXT_SETUP_REQ(msg) = cp_ue_context_setup_req(req);
-  itti_send_msg_to_task(TASK_CU_F1, 0, msg);
+  F1AP_F1AP_PDU_t *pdu = encode_ue_context_setup_req(req);
+  if (!pdu) {
+    LOG_E(F1AP, "Failed to encode UE Context Setup Request\n");
+    return;
+  }
+
+  uint8_t *buffer = NULL;
+  uint32_t length = 0;
+  int ret = f1ap_encode_pdu(pdu, &buffer, &length);
+  if (ret < 0) {
+    LOG_E(F1AP, "Failed to encode UE Context Setup Request PDU\n");
+    ASN_STRUCT_FREE(asn_DEF_F1AP_F1AP_PDU, pdu);
+    return;
+  }
+
+  f1ap_itti_send_sctp_data_req(assoc_id, buffer, length);
+  ASN_STRUCT_FREE(asn_DEF_F1AP_F1AP_PDU, pdu);
 }
 
 static void ue_context_modification_request_f1ap(sctp_assoc_t assoc_id, const f1ap_ue_context_mod_req_t *req)
